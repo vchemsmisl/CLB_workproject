@@ -91,10 +91,10 @@ class ClustersData:
                                      column='Average_cluster_number_all',
                                      value=self.aphasia_data[all_columns].apply(self.avg_length, axis=1))
 
-    def save_excel(self) -> None:
+    def save_excel(self, link: str) -> None:
         """
         Saving data with clusters to an Excel file
         """
-        with pd.ExcelWriter('/content/clusters_dataset.xlsx') as writer:
+        with pd.ExcelWriter(link) as writer:
             self.healthy_data.to_excel(writer, sheet_name='healthy', index=False)
             self.aphasia_data.to_excel(writer, sheet_name='aphasia', index=False)
