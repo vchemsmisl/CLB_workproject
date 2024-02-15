@@ -2,10 +2,9 @@
 import gensim
 import numpy as np
 
-
 class Clusterizer:
 
-    def __init__(self, model: gensim.models.fasttext.FastTextKeyedVectors | fasttext.FastText._FastText) -> None:
+    def __init__(self, model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
         self._model = model
 
     def get_vector(self, word):

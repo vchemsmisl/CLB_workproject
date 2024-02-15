@@ -129,7 +129,7 @@ class Visualizer:
                     patch.set_facecolor(color2)
 
         plt.tight_layout()
-        save_dir = '/content/visualization/metrics_visualization/'
+        save_dir = '/visualization/metrics_visualization/'
 
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -176,7 +176,7 @@ class Visualizer:
                     patch.set_facecolor(color2)
 
         plt.tight_layout()
-        save_dir = '/content/visualization/metrics_visualization/'
+        save_dir = '/visualization/metrics_visualization/'
 
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -187,8 +187,8 @@ class Visualizer:
 
     def create_dir(self, dataset, id):
         """
-    Creating/finding a sufficient directory
-    """
+        Creating/finding a sufficient directory
+        """
 
         if dataset is self.healthy_data_clean:
             folder_dir = 'healthy/clean'
@@ -221,9 +221,9 @@ class Visualizer:
 
     def visualize_all(self, sheet):
         """
-    Build 3 linear graphs for each datatype for a particular id,
-    draw boxplots for some of the metrics
-    """
+        Build 3 linear graphs for each datatype for a particular id,
+        draw box plots for some metrics
+        """
         for lexemes in ['clean', 'all_lexemes']:
             for id in self.cluster_saver.get_df(sheet)['ID'].values:
                 self.visualize_linear(sheet=sheet, lexemes=lexemes, id=id)

@@ -1,10 +1,9 @@
-import fasttext
 import gensim
 import json
 
 
 class Vectorizer:
-    def __init__(self, model: fasttext.FastText._FastText | gensim.models.fasttext.FastTextKeyedVectors) -> None:
+    def __init__(self, model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
         self.model = model
         self._vectors_dictionary = {'BOS': self.get_vector('BOS').tolist(),
                                     'EOS': self.get_vector('EOS').tolist(),

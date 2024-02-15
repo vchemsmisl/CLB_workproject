@@ -1,4 +1,5 @@
 import gensim
+from pathlib import Path
 from src.data_extraction import DataExtraction
 from src.vectorizer import Vectorizer
 from src.clusters_data_saver import ClustersData
@@ -6,7 +7,8 @@ from src.clusterizer import Clusterizer
 from src.visualizer import Visualizer
 
 if __name__ == '__main__':
-    geowac_model = gensim.models.KeyedVectors.load('link')
+    model_path = Path('C:\pyproj\CLB_workproject\models\geowac\model.model')
+    geowac_model = gensim.models.KeyedVectors.load(model_path)
     extractor = DataExtraction('/content/cleaned_dataset.xlsx')
     vectoriser = Vectorizer(geowac_model)
     cluster_saver = ClustersData(extractor)
