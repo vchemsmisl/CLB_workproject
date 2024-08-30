@@ -1,13 +1,15 @@
 import gensim
-from pathlib import Path
+import pandas as pd
+
 from src.data_extraction import DataExtraction
 from src.vectorizer import Vectorizer
 from src.clusters_data_saver import ClustersData
 from src.clusterizer import Clusterizer
 from src.visualizer import Visualizer
 
-if __name__ == '__main__':
-    model_path = Path('C:\pyproj\CLB_workproject\models\geowac\model.model')
+
+def main():
+    model_path = 'C:\pyproj\CLB_workproject\models\geowac\model.model'
     geowac_model = gensim.models.KeyedVectors.load(model_path)
     extractor = DataExtraction('/content/cleaned_dataset.xlsx')
     vectoriser = Vectorizer(geowac_model)
@@ -36,19 +38,24 @@ if __name__ == '__main__':
                         clusters_list.append([])
                         continue
 
-                    tokens_sequence = vectoriser.get_sequence(words_string)  # string of words coverted to list with special tags
+                    tokens_sequence = vectoriser.get_sequence(
+                        words_string)  # string of words coverted to list with special tags
                     vectoriser.update_dict(words_string)  # adding words embeddings to a dict
-                    cell_clusters = clusters_getter.cluster(tokens_sequence) # converting list of words to list of clusters
+                    cell_clusters = clusters_getter.cluster(
+                        tokens_sequence)  # converting list of words to list of clusters
                     clusters_list.append(cell_clusters)
 
-                    DB_value = clusters_getter.davies_bouldin_index(cell_clusters) # calculating Davies Bouldin index for each cell
+                    DB_value = clusters_getter.davies_bouldin_index(
+                        cell_clusters)  # calculating Davies Bouldin index for each cell
                     if DB_value:
                         DB_values_column.append(DB_value)
-                    silhouette_value = clusters_getter.silhouette_score(cell_clusters) # calculating Silhouette score for each cell
+                    silhouette_value = clusters_getter.silhouette_score(
+                        cell_clusters)  # calculating Silhouette score for each cell
                     silhouette_values_column.append(silhouette_value)
 
-                cluster_saver.add_column(page, category, lexemes, pd.Series(clusters_list))  # adding clusters column in a table
-                cluster_saver.count_switches(page, category, lexemes) # counting number of switches
+                cluster_saver.add_column(page, category, lexemes,
+                                         pd.Series(clusters_list))  # adding clusters column in a table
+                cluster_saver.count_switches(page, category, lexemes)  # counting number of switches
                 vectoriser.update_json()  # updating a json-file with words embeddings from a dict for each category
 
                 DB_values_category.extend(DB_values_column)
@@ -62,10 +69,13 @@ if __name__ == '__main__':
         silhouette_values_page.extend(silhouette_values_lexemes_kind)
 
     cluster_saver.save_excel('result/clusters_dataset.xlsx')
-    vectors = vectoriser.get_dictionary()
+    # vectors = vectoriser.get_dictionary()
 
-    visualizer = Visualizer(cluster_saver, vectors)
+    # visualizer = Visualizer(cluster_saver, vectors)
+    #
+    # visualizer.visualize_all('healthy')
+    # visualizer.visualize_all('aphasia')
 
-    visualizer.visualize_all('healthy')
-    visualizer.visualize_all('aphasia')
 
+if __name__ == '__main__':
+    main()
