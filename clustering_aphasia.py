@@ -1,9 +1,9 @@
 import gensim
 import pandas as pd
 
-from src.data_extraction import DataExtraction
+from src.data_extraction import DataExtractionAphasia
 from src.vectorizer import Vectorizer
-from src.clusters_data_saver import ClustersData
+from src.clusters_data_saver import ClustersDataAphasia
 from src.clusterizer import Clusterizer
 from src.visualizer import Visualizer
 
@@ -11,9 +11,9 @@ from src.visualizer import Visualizer
 def main():
     model_path = 'C:\pyproj\CLB_workproject\models\geowac\model.model'
     geowac_model = gensim.models.KeyedVectors.load(model_path)
-    extractor = DataExtraction('/content/cleaned_dataset.xlsx')
+    extractor = DataExtractionAphasia('/content/cleaned_dataset.xlsx')
     vectoriser = Vectorizer(geowac_model)
-    cluster_saver = ClustersData(extractor, geowac_model)
+    cluster_saver = ClustersDataAphasia(extractor, geowac_model)
     clusters_getter = Clusterizer(geowac_model)
 
     # general principle: clusterising one cell at a time

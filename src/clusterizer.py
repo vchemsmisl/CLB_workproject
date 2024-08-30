@@ -2,6 +2,7 @@
 import gensim
 import numpy as np
 
+
 class Clusterizer:
 
     def __init__(self, model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
@@ -57,7 +58,7 @@ class Clusterizer:
             b_c_sim = c_d_sim   # S(B,C) equals S(C,D) from previous iteration
             c_d_sim = self.get_cosine_similarity(word_sequence[idx + 1], word_sequence[idx + 2])
 
-            if a_b_sim > b_c_sim and b_c_sim < c_d_sim: # a condition of a switch
+            if a_b_sim > b_c_sim and b_c_sim < c_d_sim:  # a condition of a switch
                 words_by_clusters.append(cluster)
                 cluster = []
 
@@ -66,7 +67,7 @@ class Clusterizer:
         return words_by_clusters
 
     @staticmethod
-    def _custom_similarity(embedding_1, embedding_2): # с этим что-то надо сделать, оно работает для фасттехта?
+    def _custom_similarity(embedding_1, embedding_2):  # с этим что-то надо сделать, оно работает для фасттехта?
         return np.dot(gensim.matutils.unitvec(embedding_1),
                       gensim.matutils.unitvec(embedding_2))
 

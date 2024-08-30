@@ -2,21 +2,51 @@ import pandas as pd
 import gensim
 import numpy as np
 from itertools import permutations
-from src.data_extraction import DataExtraction
+from src.data_extraction import (DataExtractionBase,
+                                 DataExtractionAphasia,
+                                 DataExtractionPDTexts)
 
 
 class ClustersDataBase:
-    pass
+
+    def __init__(self,
+                 extractor: DataExtractionBase,
+                 model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
+        self.extractor = extractor
+        self.model = model
+        self.healthy_data = None
+        self.impediment_data = None
+        self.impediment_type = ''
+
+    def get_df(self, sheet):
+        pass
+
+    def add_column(self,
+                   sheet_name: str,
+                   category: str,
+                   clusters: pd.Series) -> None:
+        pass
+
+    def save_excel(self, path) -> None:
+        """
+        Saving data with clusters to an Excel file
+        """
+        with pd.ExcelWriter(path) as writer:
+            self.healthy_data.to_excel(writer, sheet_name='healthy', index=False)
+            #self.impediment_data.to_excel(writer, sheet_name=self.impediment_type, index=False)
 
 
 class ClustersDataAphasia(ClustersDataBase):
-    def __init__(self, extractor: DataExtraction, model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
-        self.extractor = extractor
-        self.id_healthy = extractor.get_ids()
-        self.id_aphasia = extractor.get_ids('aphasia')
+
+    def __init__(self,
+                 extractor: DataExtractionAphasia,
+                 model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
+        super().__init__(extractor, model)
+        self.id_healthy = extractor.get_ids('healthy')
+        self.id_aphasia = extractor.get_ids('aphasia')  ## позже надо везде переименовать в self.impediment_data
         self.healthy_data = pd.DataFrame(self.id_healthy)
-        self.aphasia_data = pd.DataFrame(self.id_aphasia)
-        self.model = model
+        self.aphasia_data = pd.DataFrame(self.id_aphasia)  ## позже надо везде переименовать в self.impediment_data
+        self.impediment_type = 'aphasia'
 
     def get_df(self, sheet):
         if sheet == 'healthy':
@@ -25,9 +55,9 @@ class ClustersDataAphasia(ClustersDataBase):
 
     @staticmethod
     def get_column_name(category: str, lexemes: str) -> str:
-        category_types = {'animals':'a',
-                          'professions':'b',
-                          'cities':'c'}
+        category_types = {'animals': 'a',
+                          'professions': 'b',
+                          'cities': 'c'}
         return f'C6({category_types.get(category)})-{lexemes}'
 
     @staticmethod
@@ -217,7 +247,6 @@ class ClustersDataAphasia(ClustersDataBase):
         denominator = np.sqrt(f_nc)
         return numerator / denominator
 
-
     def avg_cluster_t_score(self, cell, column_clusters):
         all_words = ' '.join([word for cell in column_clusters for cluster in cell for word in cluster])
         N = len(all_words)
@@ -362,10 +391,33 @@ class ClustersDataAphasia(ClustersDataBase):
                                   column = 'Mean_cluster_size_all',
                                   value = self.aphasia_data[all_columns].apply(self.avg_cluster_size, axis=1))
 
-    def save_excel(self) -> None:
+
+class ClustersDataPDTexts(ClustersDataBase):
+
+    def __init__(self,
+                 extractor: DataExtractionPDTexts,
+                 model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
+        super().__init__(extractor, model)
+        self.id_healthy = extractor.get_ids('healthy')
+        #self.id_impediment = extractor.get_ids('PD')
+        self.healthy_data = pd.DataFrame(self.id_healthy)
+        #self.impediment_data = pd.DataFrame(self.id_aphasia)
+        self.impediment_type = 'PD'
+
+    def get_df(self, sheet):
+        if sheet == 'healthy':
+            return self.healthy_data
+        return self.aphasia_data
+
+    def add_column(self,
+                   sheet_name: str,
+                   category: str,
+                   clusters: pd.Series) -> None:
         """
-        Saving data with clusters to an Excel file
+        Adding a column with clusters
         """
-        with pd.ExcelWriter('/content/clusters_dataset.xlsx') as writer:
-            self.healthy_data.to_excel(writer, sheet_name='healthy', index=False)
-            self.aphasia_data.to_excel(writer, sheet_name='aphasia', index=False)
+        if sheet_name == 'healthy':
+            self.healthy_data[category] = clusters
+
+        else:
+            self.impediment_data[category] = clusters
