@@ -1,4 +1,4 @@
-The repository contains the code of HSE Center of Language and Brain's project entitled "Цифровые инструменты для коррекции и оценки речевых и психических расстройств" (https://stratpro.hse.ru/resilient-brain/#subproject2).
+The repository contains the code of HSE Center of Language and Brain's project entitled Digital Instruments for Treating and Evaluating Language and Mental Disorders (Цифровые инструменты для коррекции и оценки речевых и психических расстройств) (https://stratpro.hse.ru/resilient-brain/#subproject2).
 
 Specifically, it contains the preprocessing of language materials, the implementation of classification algorithm according to Lundin et. al (https://www.sciencedirect.com/science/article/abs/pii/S016517812200018X) and metrics calculation.
 
