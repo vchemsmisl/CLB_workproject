@@ -66,7 +66,7 @@ class DataExtractionPDTexts(DataExtractionBase):
     def __init__(self, link: str) -> None:
         super().__init__(link)
         self.dataset_norm = pd.read_excel(link, sheet_name='healthy')
-        # self.dataset_pd = pd.read_excel(link, sheet_name='PD')
+        self.dataset_pd = pd.read_excel(link, sheet_name='general_massive')
         self.category_types = ['tokens', 'tokens_without_stops', 'lemmas', 'lemmas_without_stops']
 
     def get_ids(self, sheet_name: str = 'healthy') -> int:
@@ -75,7 +75,7 @@ class DataExtractionPDTexts(DataExtractionBase):
         """
         if sheet_name == 'healthy':
             return self.dataset_norm['speakerID']
-        return self.dataset_pd['speakerID']
+        return self.dataset_pd['ID']
 
     def get_series(self,
                    sheet_name: str,

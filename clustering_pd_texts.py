@@ -13,7 +13,7 @@ def main():
     # defining classes
     model_path = rf'{project_path}\models\geowac\model.model'
     geowac_model = gensim.models.KeyedVectors.load(model_path)
-    extractor = DataExtractionPDTexts(rf'{project_path}\data\control_group_preprocessed.xlsx')
+    extractor = DataExtractionPDTexts(rf'{project_path}\data\control_pd_preprocessed.xlsx')
     vectoriser = Vectorizer(geowac_model)
     cluster_saver = ClustersDataPDTexts(extractor, geowac_model)
     clusters_getter = Clusterizer(geowac_model)
@@ -22,7 +22,7 @@ def main():
     DB_values_page = []
     silhouette_values_page = []
 
-    for page in ['healthy']:  ## in future will be ['healthy', 'PD']
+    for page in ['healthy', 'pd']:
         DB_values_lexemes_kind = []
         silhouette_values_lexemes_kind = []
 
@@ -58,6 +58,13 @@ def main():
                                      pd.Series(clusters_list))
             # adding clusters column in a table
 
+            # counting metrics
+            cluster_saver.count_num_switches(page, category)
+            cluster_saver.count_mean_cluster_size(page, category)
+            cluster_saver.count_mean_distances(page, category)
+            cluster_saver.count_mean_silhouette_score(page, category)
+            cluster_saver.count_cluster_t_scores(page, category)
+
             DB_values_lexemes_kind.extend(DB_values_column)
             silhouette_values_lexemes_kind.extend(silhouette_values_column)
 
@@ -65,7 +72,7 @@ def main():
         silhouette_values_page.extend(silhouette_values_lexemes_kind)
 
     clusters_getter.evaluate_clustering(DB_values_page, silhouette_values_page)
-    cluster_saver.save_excel(rf'{project_path}\result\pd_texts\control_group_clusters_dataset.xlsx')
+    cluster_saver.save_excel(rf'{project_path}\result\pd_texts\clusters_metrics_dataset.xlsx')
     # vectors = vectoriser.get_dictionary()
 
     # visualizer = Visualizer(cluster_saver, vectors)
