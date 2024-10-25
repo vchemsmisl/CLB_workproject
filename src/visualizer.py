@@ -2,8 +2,9 @@ import matplotlib.pyplot as plt
 import gensim
 import numpy as np
 import os
-from src.clusters_data_saver import ClustersData
+from src.clusters_data_saver import ClustersData, ClustersDataPDTexts
 
+# class BaseVisualizer:
 
 class Visualizer:
 
@@ -227,6 +228,190 @@ class Visualizer:
         for lexemes in ['clean', 'all_lexemes']:
             for id in self.cluster_saver.get_df(sheet)['ID'].values:
                 self.visualize_linear(sheet=sheet, lexemes=lexemes, id=id)
+
+        self.visualize_avg_cluster_size()
+        self.visualize_switch_num()
+
+class PDVisualizer:
+
+    def __init__(self, cluster_saver: ClustersDataPDTexts, model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
+        self.cluster_saver = cluster_saver
+        self.healthy_data = cluster_saver.get_df('healthy')[['ID',
+                                                            'lemmas']]
+        self.impediment_data = cluster_saver.get_df('impediment')[['ID',
+                                                                   'lemmas']]
+        self.model = model
+
+    def cosine_similarity(self, w1, w2):
+        return self.model.similarity(w1, w2)
+
+    def visualize_linear(self, sheet: str, id: str):
+        """
+    dataset - one of 4 dataframes
+    """
+        if sheet == 'healthy':
+            dataset = self.healthy_data
+        else:
+            dataset = self.impediment_data
+
+        data = dataset[dataset['ID'] == id]  # data for a specific user
+
+        fig, axs = plt.subplots(3, figsize=(10, 15))
+        custom_lines = [
+            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='First Response'),
+            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='yellow', markersize=10, label='Switch'),
+            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=10, label='Cluster')]
+
+        for i, columns in enumerate(data.columns[1:]):  # getting names of 3 columns we need
+            words = [item for sublist in data[columns].values[0] for item in sublist]  # list of all words
+            first_words = [sublist[0] for sublist in data[columns].values[0]]
+            ax = axs[i]
+            y_min = 0
+
+            for idx in range(len(words)):
+                label = words[idx]
+                if idx == 0:
+                    y = 0.0
+                else:
+                    y = self.cosine_similarity(words[idx], words[idx - 1])
+
+                if y < y_min:
+                    y_min = y
+
+                color = 'red' if idx == 0 else 'yellow' if words[idx] in first_words else 'blue'
+                ax.scatter(idx, y, label=label, color=color)
+
+                if idx == 1:
+                    ax.plot([idx - 1, idx], [0.0, y], color='gray', linewidth=0.8)
+
+                if idx > 1:
+                    ax.plot([idx - 1, idx], [self.cosine_similarity(words[idx - 2], words[idx - 1]), y], color='gray',
+                            linewidth=0.8)
+
+                ax.annotate(label, (idx, y), textcoords="offset points", xytext=(0, 10), fontsize=8, ha='center')
+
+            ax.set_ylim(y_min - 0.2, 1)
+            ax.set_title(f'{columns} for {id}')
+            ax.set_ylabel('Word2Vec Similarity')
+            ax.legend(handles=custom_lines, loc='upper right')
+
+        plt.tight_layout()
+
+        directory = self.create_dir(dataset, id)
+
+        self.save_image(directory)
+
+    def visualize_avg_cluster_size(self):
+
+        temp_df_healthy = self.cluster_saver.get_df('healthy')['Mean_cluster_size_lemmas']
+        temp_df_impediment = self.cluster_saver.get_df('impediment')['Mean_cluster_size_lemmas']
+
+        fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(8, 8))
+        fig.suptitle('Average cluster number')
+
+        bplot1 = ax1.boxplot(temp_df_healthy,
+                             notch=True,
+                             vert=True,
+                             patch_artist=True,
+                             labels='Mean_cluster_size_lemmas')
+        ax1.set_title('Healthy control group')
+
+        bplot2 = ax2.boxplot(temp_df_impediment,
+                             notch=True,
+                             vert=True,
+                             patch_artist=True,
+                             labels='Mean_cluster_size_lemmas')
+        ax2.set_title('Impediment group')
+
+        color1 = 'lightgreen'
+        color2 = 'lightblue'
+        for bplot in (bplot1, bplot2):
+            for idx, patch in enumerate(bplot['boxes']):
+                if idx == 0:
+                    patch.set_facecolor(color1)
+                else:
+                    patch.set_facecolor(color2)
+
+        plt.tight_layout()
+        save_dir = '/visualization/metrics_visualization/pd/'
+
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        directory = os.path.join(save_dir, 'mean_cluster_size.jpg')
+
+        self.save_image(directory)
+
+    def visualize_switch_num(self):
+        temp_df_healthy = self.cluster_saver.get_df('healthy')['Switch_number_lemmas']
+        temp_df_impediment = self.cluster_saver.get_df('impediment')['Switch_number_lemmas']
+
+        fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(20, 10))
+        fig.suptitle('Number of switches')
+
+        bplot1 = ax1.boxplot(temp_df_healthy,
+                             notch=True,
+                             vert=True,
+                             patch_artist=True,
+                             labels='Switch_number_lemmas')
+        ax1.set_title('Healthy control group')
+
+        bplot2 = ax2.boxplot(temp_df_impediment,
+                             notch=True,
+                             vert=True,
+                             patch_artist=True,
+                             labels='Switch_number_lemmas')
+        ax2.set_title('Impediment group')
+
+        color1 = 'lightgreen'
+        color2 = 'lightblue'
+        for bplot in (bplot1, bplot2):
+            for idx, patch in enumerate(bplot['boxes']):
+                if idx < 3:
+                    patch.set_facecolor(color1)
+                else:
+                    patch.set_facecolor(color2)
+
+        plt.tight_layout()
+        save_dir = '/visualization/metrics_visualization/pd/'
+
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        directory = os.path.join(save_dir, 'switch_num.jpg')
+
+        self.save_image(directory)
+
+    def create_dir(self, dataset, id):
+        """
+        Creating/finding a sufficient directory
+        """
+
+        if dataset is self.healthy_data:
+            folder_dir = 'healthy'
+
+        else:
+            folder_dir = 'impediment'
+
+        save_dir = os.path.join('visualization/pd_project/', folder_dir)
+
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        return os.path.join(save_dir, f'{id}.jpg')
+
+    @staticmethod
+    def save_image(save_dir):
+        plt.savefig(save_dir, format='jpg')
+        plt.close()
+
+    def visualize_all(self, sheet):
+        """
+        Build 3 linear graphs for each datatype for a particular id,
+        draw box plots for some metrics
+        """
+        for id in self.cluster_saver.get_df(sheet)['ID'].values:
+            self.visualize_linear(sheet=sheet, id=id)
 
         self.visualize_avg_cluster_size()
         self.visualize_switch_num()
