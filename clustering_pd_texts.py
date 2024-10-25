@@ -5,7 +5,7 @@ from src.data_extraction import DataExtractionPDTexts
 from src.clusters_data_saver import ClustersDataPDTexts
 from src.clusterizer import Clusterizer
 from src.vectorizer import Vectorizer
-from src.visualizer import Visualizer
+from src.visualizer import PDVisualizer
 
 project_path = r'C:\Users\vchemsmisl\Desktop\programming\CLB_workproject'
 
@@ -75,7 +75,7 @@ def main():
     clusters_getter.evaluate_clustering(DB_values_page, silhouette_values_page)
     cluster_saver.save_excel(rf'{project_path}\result\pd_texts\clusters_metrics_dataset.xlsx')
 
-    visualizer = Visualizer(cluster_saver, geowac_model)
+    visualizer = PDVisualizer(cluster_saver, geowac_model)
 
     visualizer.visualize_all('healthy')
     visualizer.visualize_all('impediment')
