@@ -2,14 +2,43 @@ import matplotlib.pyplot as plt
 import gensim
 import numpy as np
 import os
-from src.clusters_data_saver import ClustersData, ClustersDataPDTexts
+from src.clusters_data_saver import ClustersDataBase, ClustersDataAphasia, ClustersDataPDTexts
 
-# class BaseVisualizer:
-
-class Visualizer:
-
-    def __init__(self, cluster_saver: ClustersData, vectors: dict) -> None:
+class VisualizerBase:
+    def __init__(self, cluster_saver: ClustersDataBase) -> None:
         self.cluster_saver = cluster_saver
+
+    def cosine_similarity(self, w1, w2):
+        pass
+
+    def visualize_linear(self, sheet: str, id: str, lexemes: str):
+        pass
+
+    def visualize_avg_cluster_size(self):
+        """
+        Count average cluster size
+        """
+        pass
+
+    def visualize_switch_num(self):
+        pass
+
+    def create_dir(self, dataset, id):
+        pass
+
+    @staticmethod
+    def save_image(save_dir):
+        plt.savefig(save_dir, format='jpg')
+        plt.close()
+
+    def visualize_all(self, sheet):
+        pass
+
+
+class VisualizerAphasia(VisualizerBase):
+
+    def __init__(self, cluster_saver: ClustersDataAphasia, vectors: dict) -> None:
+        super().__init__(cluster_saver)
         self.healthy_data_clean = cluster_saver.get_df('healthy')[['ID',
                                                                    'C6(a)-clean',
                                                                    'C6(b)-clean',
@@ -130,7 +159,7 @@ class Visualizer:
                     patch.set_facecolor(color2)
 
         plt.tight_layout()
-        save_dir = '/visualization/metrics_visualization/'
+        save_dir = '/visualization/metrics_visualization/aphasia_project'
 
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -177,7 +206,7 @@ class Visualizer:
                     patch.set_facecolor(color2)
 
         plt.tight_layout()
-        save_dir = '/visualization/metrics_visualization/'
+        save_dir = '/visualization/metrics_visualization/aphasia_project/'
 
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -203,22 +232,12 @@ class Visualizer:
         else:
             folder_dir = 'aphasia/all_lexemes'
 
-        save_dir = os.path.join('visualization/', folder_dir)
+        save_dir = os.path.join('visualization/aphasia_project/', folder_dir)
 
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
         return os.path.join(save_dir, f'{id}.jpg')
-
-    @staticmethod
-    def save_image(save_dir):
-        plt.savefig(save_dir, format='jpg')
-        plt.close()
-
-    # @staticmethod
-    # def show_image(path):
-    #   img = Image.open(path)
-    #   img.show()
 
     def visualize_all(self, sheet):
         """
@@ -231,6 +250,7 @@ class Visualizer:
 
         self.visualize_avg_cluster_size()
         self.visualize_switch_num()
+
 
 class PDVisualizer:
 
@@ -333,7 +353,7 @@ class PDVisualizer:
                     patch.set_facecolor(color2)
 
         plt.tight_layout()
-        save_dir = '/visualization/metrics_visualization/pd/'
+        save_dir = '/visualization/metrics_visualization/pd_project/'
 
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -373,7 +393,7 @@ class PDVisualizer:
                     patch.set_facecolor(color2)
 
         plt.tight_layout()
-        save_dir = '/visualization/metrics_visualization/pd/'
+        save_dir = '/visualization/metrics_visualization/pd_project/'
 
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -399,11 +419,6 @@ class PDVisualizer:
             os.makedirs(save_dir)
 
         return os.path.join(save_dir, f'{id}.jpg')
-
-    @staticmethod
-    def save_image(save_dir):
-        plt.savefig(save_dir, format='jpg')
-        plt.close()
 
     def visualize_all(self, sheet):
         """

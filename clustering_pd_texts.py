@@ -7,7 +7,7 @@ from src.clusterizer import Clusterizer
 from src.vectorizer import Vectorizer
 from src.visualizer import PDVisualizer
 
-project_path = r'C:\Users\vchemsmisl\Desktop\programming\CLB_workproject'
+project_path = r'C:\pyproj\CLB_workproject'
 
 
 def main():
