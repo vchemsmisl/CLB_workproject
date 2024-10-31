@@ -257,7 +257,7 @@ class PDVisualizer:
     def __init__(self, cluster_saver: ClustersDataPDTexts, model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
         self.cluster_saver = cluster_saver
         self.healthy_data = cluster_saver.get_df('healthy')[['ID',
-                                                            'lemmas']]
+                                                            'lemmas', ]]
         self.impediment_data = cluster_saver.get_df('impediment')[['ID',
                                                                    'lemmas']]
         self.model = model
@@ -265,7 +265,7 @@ class PDVisualizer:
     def cosine_similarity(self, w1, w2):
         return self.model.similarity(w1, w2)
 
-    def visualize_linear(self, sheet: str, id: str):
+    def visualize_linear(self, sheet: str, id: str, discourse: str):
         """
     dataset - one of 4 dataframes
     """
@@ -274,7 +274,7 @@ class PDVisualizer:
         else:
             dataset = self.impediment_data
 
-        data = dataset[dataset['ID'] == id]  # data for a specific user
+        data = dataset.loc[(dataset['ID'] == id) & (dataset['discourse.type'] == discourse)]  # data for a specific user
 
         fig, axs = plt.subplots(3, figsize=(10, 15))
         custom_lines = [
@@ -317,7 +317,7 @@ class PDVisualizer:
 
         plt.tight_layout()
 
-        directory = self.create_dir(dataset, id)
+        directory = self.create_dir(dataset, id, discourse)
 
         self.save_image(directory)
 
@@ -402,7 +402,7 @@ class PDVisualizer:
 
         self.save_image(directory)
 
-    def create_dir(self, dataset, id):
+    def create_dir(self, dataset, id, discourse):
         """
         Creating/finding a sufficient directory
         """
@@ -418,7 +418,7 @@ class PDVisualizer:
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-        return os.path.join(save_dir, f'{id}.jpg')
+        return os.path.join(save_dir, f'{id}_{discourse}.jpg')
 
     def visualize_all(self, sheet):
         """

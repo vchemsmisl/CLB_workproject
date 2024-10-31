@@ -4,7 +4,6 @@ import numpy as np
 
 
 class Clusterizer:
-
     def __init__(self, model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
         self._model = model
 

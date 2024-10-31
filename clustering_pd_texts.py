@@ -69,6 +69,9 @@ def main():
             DB_values_lexemes_kind.extend(DB_values_column)
             silhouette_values_lexemes_kind.extend(silhouette_values_column)
 
+        discourses = extractor.get_series(page, 'discourse.type')
+        cluster_saver.add_column(page, 'discourse.type', discourses)
+
         DB_values_page.extend(DB_values_lexemes_kind)
         silhouette_values_page.extend(silhouette_values_lexemes_kind)
 
@@ -79,6 +82,7 @@ def main():
 
     visualizer.visualize_all('healthy')
     visualizer.visualize_all('impediment')
+
 
 if __name__ == '__main__':
     main()
