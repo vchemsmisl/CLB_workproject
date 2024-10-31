@@ -256,10 +256,12 @@ class PDVisualizer:
 
     def __init__(self, cluster_saver: ClustersDataPDTexts, model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
         self.cluster_saver = cluster_saver
-        self.healthy_data = cluster_saver.get_df('healthy')[['ID',
-                                                            'lemmas', ]]
-        self.impediment_data = cluster_saver.get_df('impediment')[['ID',
-                                                                   'lemmas']]
+        self.healthy_data = cluster_saver.get_df('healthy')[['fileID',
+                                                            'lemmas',
+                                                             'discourse.type']]
+        self.impediment_data = cluster_saver.get_df('PD')[['fileID',
+                                                            'lemmas',
+                                                            'discourse.type']]
         self.model = model
 
     def cosine_similarity(self, w1, w2):
@@ -274,7 +276,7 @@ class PDVisualizer:
         else:
             dataset = self.impediment_data
 
-        data = dataset.loc[(dataset['ID'] == id) & (dataset['discourse.type'] == discourse)]  # data for a specific user
+        data = dataset.loc[(dataset['fileID'] == id) & (dataset['discourse.type'] == discourse)]  # data for a specific user
 
         fig, axs = plt.subplots(3, figsize=(10, 15))
         custom_lines = [
@@ -324,7 +326,7 @@ class PDVisualizer:
     def visualize_avg_cluster_size(self):
 
         temp_df_healthy = self.cluster_saver.get_df('healthy')['Mean_cluster_size_lemmas']
-        temp_df_impediment = self.cluster_saver.get_df('impediment')['Mean_cluster_size_lemmas']
+        temp_df_impediment = self.cluster_saver.get_df('PD')['Mean_cluster_size_lemmas']
 
         fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(8, 8))
         fig.suptitle('Average cluster number')
@@ -364,7 +366,7 @@ class PDVisualizer:
 
     def visualize_switch_num(self):
         temp_df_healthy = self.cluster_saver.get_df('healthy')['Switch_number_lemmas']
-        temp_df_impediment = self.cluster_saver.get_df('impediment')['Switch_number_lemmas']
+        temp_df_impediment = self.cluster_saver.get_df('PD')['Switch_number_lemmas']
 
         fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(20, 10))
         fig.suptitle('Number of switches')
@@ -411,21 +413,21 @@ class PDVisualizer:
             folder_dir = 'healthy'
 
         else:
-            folder_dir = 'impediment'
+            folder_dir = 'PD'
 
-        save_dir = os.path.join('visualization/pd_project/', folder_dir)
+        save_dir = os.path.join('visualization/pd_project/', folder_dir, discourse)
 
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-        return os.path.join(save_dir, f'{id}_{discourse}.jpg')
+        return os.path.join(save_dir, f'{id}.jpg')
 
     def visualize_all(self, sheet):
         """
         Build 3 linear graphs for each datatype for a particular id,
         draw box plots for some metrics
         """
-        for id in self.cluster_saver.get_df(sheet)['ID'].values:
+        for id in self.cluster_saver.get_df(sheet)['fileID'].values:
             self.visualize_linear(sheet=sheet, id=id)
 
         self.visualize_avg_cluster_size()
