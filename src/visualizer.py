@@ -271,7 +271,21 @@ class VisualizerPDTexts(VisualizerBase):
             self.healthy_data = pd.read_excel(dataset, sheet_name='healthy')
             self.impediment_data = pd.read_excel(dataset, sheet_name='PD')
 
+            # converting strings with lists to lists
+            self.healthy_data['lemmas'] = self.healthy_data['lemmas'].apply(self._string_to_list)
+            self.impediment_data['lemmas'] = self.impediment_data['lemmas'].apply(self._string_to_list)
+
         self.model = model
+        self.category_types = ['lemmas']
+
+    @staticmethod
+    def _string_to_list(text_spans_str):
+
+        text_spans = text_spans_str.lstrip("['").rstrip("]'").split("'], ['")
+        clusters_spans = [text_span.lstrip("['").rstrip("]'").split("', '")
+                          for text_span in text_spans]
+
+        return clusters_spans if clusters_spans != [''] else []
 
     def cosine_similarity(self, w1, w2):
         return self.model.similarity(w1, w2)
@@ -287,7 +301,6 @@ class VisualizerPDTexts(VisualizerBase):
 
         data = dataset.loc[dataset['fileID'] == id]  # data for a specific user
 
-        categories = self.cluster_saver.extractor.category_types
         fig, axs = plt.subplots(3, figsize=(10, 15))
         custom_lines = [
             plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='First Response'),
@@ -295,7 +308,7 @@ class VisualizerPDTexts(VisualizerBase):
             plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=10, label='Cluster')
         ]
 
-        for i, columns in enumerate(categories):  # getting names of columns we need
+        for i, columns in enumerate(self.category_types):  # getting names of columns we need
             words = [item for sublist in data[columns].values[0] for item in sublist]  # list of all words
             first_words = [sublist[0] for sublist in data[columns].values[0]]
             ax = axs[i]
@@ -401,18 +414,18 @@ class VisualizerPDTexts(VisualizerBase):
         Build 3 linear graphs for each datatype for a particular id,
         draw box plots for metrics
         """
-        for id in self.cluster_saver.get_df(sheet)['fileID'].values:
-            if sheet == 'healthy':
-                for _, row in self.healthy_data.iterrows():
-                    self.visualize_linear(sheet=sheet,
-                                          id=row['fileID'],
-                                          discourse=row['discourse.type'])
+        # for id in self.cluster_saver.get_df(sheet)['fileID'].values:
+        if sheet == 'healthy':
+            for _, row in self.healthy_data.iterrows():
+                self.visualize_linear(sheet=sheet,
+                                      id=row['fileID'],
+                                      discourse=row['discourse.type'])
 
-            else:
-                for _, row in self.impediment_data.iterrows():
-                    self.visualize_linear(sheet=sheet,
-                                          id=row['fileID'],
-                                          discourse=row['discourse.type'])
+        else:
+            for _, row in self.impediment_data.iterrows():
+                self.visualize_linear(sheet=sheet,
+                                      id=row['fileID'],
+                                      discourse=row['discourse.type'])
 
         self._visualize_metric('Switch_number')
         self._visualize_metric('Mean_cluster_size')
