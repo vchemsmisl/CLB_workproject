@@ -10,6 +10,7 @@ from src.visualizer import VisualizerPDTexts
 
 filterwarnings('ignore')
 
+# вот это убрать и заменить на обращение к родительской папке
 # project_path = r'C:\pyproj\CLB_workproject' # Dasha
 project_path = r'C:\programming\CLB_workproject' # Danila
 
@@ -99,10 +100,13 @@ def main():
         dataset_path = rf'{project_path}\result\pd_texts\clusters_metrics_dataset.xlsx'
         visualizer = VisualizerPDTexts(geowac_model, dataset=dataset_path)
 
-    print('Starting two-group visualisation...')
     # visualizing metrics across two groups: healthy and PD
-    visualizer.visualize_all('healthy')
-    visualizer.visualize_all('PD')
+    print('Starting two-group visualisation...')
+
+    for group in ['healthy', 'PD']:
+        print(f'Visualizing {group}')
+        visualizer.visualize_all(group)
+
     print('Finishing two-group visualisation!')
 
 

@@ -345,18 +345,20 @@ class VisualizerPDTexts(VisualizerBase):
         fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(8, 8))
         fig.suptitle(metric_name)
 
-        bplot1 = ax1.boxplot(self.healthy_data,
+        bplot1 = ax1.boxplot(self.healthy_data[f'{metric_name}_lemmas'],
                              notch=True,
                              vert=True,
                              patch_artist=True,
-                             labels=f'{metric_name}_lemmas')
+                             # labels=f'{metric_name}_lemmas'
+                             )
         ax1.set_title('Healthy control group')
 
-        bplot2 = ax2.boxplot(self.impediment_data,
+        bplot2 = ax2.boxplot(self.impediment_data[f'{metric_name}_lemmas'],
                              notch=True,
                              vert=True,
                              patch_artist=True,
-                             labels=f'{metric_name}_lemmas')
+                             # labels=f'{metric_name}_lemmas'
+                             )
         ax2.set_title('Impediment group')
 
         color1 = 'lightgreen'
@@ -369,7 +371,8 @@ class VisualizerPDTexts(VisualizerBase):
                     patch.set_facecolor(color2)
 
         plt.tight_layout()
-        save_dir = '/visualization/metrics_visualization/pd_project/'
+        project_path = r'C:\programming\CLB_workproject' # вот это убрать и заменить на обращение к родительской папке
+        save_dir = rf'{project_path}/visualization/metrics_visualization/pd_project/'
 
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -377,87 +380,6 @@ class VisualizerPDTexts(VisualizerBase):
         directory = os.path.join(save_dir, f'{metric_name}.jpg')
 
         self.save_image(directory)
-
-    # def visualize_avg_cluster_size(self):
-    #
-    #     temp_df_healthy = self.cluster_saver.get_df('healthy')['Mean_cluster_size_lemmas']
-    #     temp_df_impediment = self.cluster_saver.get_df('PD')['Mean_cluster_size_lemmas']
-    #
-    #     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(8, 8))
-    #     fig.suptitle('Mean cluster size')
-    #
-    #     bplot1 = ax1.boxplot(temp_df_healthy,
-    #                          notch=True,
-    #                          vert=True,
-    #                          patch_artist=True,
-    #                          labels='Mean_cluster_size_lemmas')
-    #     ax1.set_title('Healthy control group')
-    #
-    #     bplot2 = ax2.boxplot(temp_df_impediment,
-    #                          notch=True,
-    #                          vert=True,
-    #                          patch_artist=True,
-    #                          labels='Mean_cluster_size_lemmas')
-    #     ax2.set_title('Impediment group')
-    #
-    #     color1 = 'lightgreen'
-    #     color2 = 'lightblue'
-    #     for bplot in (bplot1, bplot2):
-    #         for idx, patch in enumerate(bplot['boxes']):
-    #             if idx == 0:
-    #                 patch.set_facecolor(color1)
-    #             else:
-    #                 patch.set_facecolor(color2)
-    #
-    #     plt.tight_layout()
-    #     save_dir = '/visualization/metrics_visualization/pd_project/'
-    #
-    #     if not os.path.exists(save_dir):
-    #         os.makedirs(save_dir)
-    #
-    #     directory = os.path.join(save_dir, 'mean_cluster_size.jpg')
-    #
-    #     self.save_image(directory)
-    #
-    # def visualize_switch_num(self):
-    #     temp_df_healthy = self.cluster_saver.get_df('healthy')['Switch_number_lemmas']
-    #     temp_df_impediment = self.cluster_saver.get_df('PD')['Switch_number_lemmas']
-    #
-    #     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(20, 10))
-    #     fig.suptitle('Switch number')
-    #
-    #     bplot1 = ax1.boxplot(temp_df_healthy,
-    #                          notch=True,
-    #                          vert=True,
-    #                          patch_artist=True,
-    #                          labels='Switch_number_lemmas')
-    #     ax1.set_title('Healthy control group')
-    #
-    #     bplot2 = ax2.boxplot(temp_df_impediment,
-    #                          notch=True,
-    #                          vert=True,
-    #                          patch_artist=True,
-    #                          labels='Switch_number_lemmas')
-    #     ax2.set_title('Impediment group')
-    #
-    #     color1 = 'lightgreen'
-    #     color2 = 'lightblue'
-    #     for bplot in (bplot1, bplot2):
-    #         for idx, patch in enumerate(bplot['boxes']):
-    #             if idx < 3:
-    #                 patch.set_facecolor(color1)
-    #             else:
-    #                 patch.set_facecolor(color2)
-    #
-    #     plt.tight_layout()
-    #     save_dir = '/visualization/metrics_visualization/pd_project/'
-    #
-    #     if not os.path.exists(save_dir):
-    #         os.makedirs(save_dir)
-    #
-    #     directory = os.path.join(save_dir, 'switch_num.jpg')
-    #
-    #     self.save_image(directory)
 
     def create_dir(self, dataset, id, discourse):
         """
@@ -482,7 +404,7 @@ class VisualizerPDTexts(VisualizerBase):
         Build 3 linear graphs for each datatype for a particular id,
         draw box plots for metrics
         """
-        # for id in self.cluster_saver.get_df(sheet)['fileID'].values:
+        for id in self.cluster_saver.get_df(sheet)['fileID'].values:
         if sheet == 'healthy':
             for _, row in self.healthy_data.iterrows():
                 self.visualize_linear(sheet=sheet,
