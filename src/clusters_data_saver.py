@@ -81,12 +81,15 @@ class ClustersDataBase:
                     b = sum(self.model.similarity(word_1, word_2)
                             for word_2 in cluster_sequence[idx - 1]) / len(cluster_sequence[idx - 1])
 
-                s = (b - a) / max(a, b)
+                # a heuristic penalty to the wrongly occurring values <-1 and >1
+                if abs(a) <= 0.01 or abs(b) <= 0.01:
+                    s = 0
+                else:
+                    s = (b - a) / max(a, b)
+
                 silhouette_coefs.append(s)
 
-        if silhouette_coefs:
-            return sum(silhouette_coefs) / len(silhouette_coefs)
-        return np.NaN
+        return sum(silhouette_coefs) / len(silhouette_coefs)
 
     @staticmethod
     def cluster_t_score(f_n, f_c, f_nc, N):
@@ -401,10 +404,13 @@ class ClustersDataPDTexts(ClustersDataBase):
                  extractor: DataExtractionPDTexts,
                  model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
         super().__init__(extractor, model)
-        self.id_healthy = extractor.get_ids('healthy')
-        self.id_impediment = extractor.get_ids('PD')
-        self.healthy_data = pd.DataFrame(self.id_healthy)
-        self.impediment_data = pd.DataFrame(self.id_impediment)
+        # self.id_healthy = extractor.get_ids('healthy')
+        # self.id_impediment = extractor.get_ids('PD')
+        # self.healthy_data = pd.DataFrame(self.id_healthy)
+        # self.impediment_data = pd.DataFrame(self.id_impediment)
+
+        self.healthy_data = extractor.get_info_df('healthy')
+        self.impediment_data = extractor.get_info_df('PD')
         self.impediment_type = 'PD'
 
     def get_df(self, sheet):

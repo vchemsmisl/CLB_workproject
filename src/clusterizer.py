@@ -133,10 +133,12 @@ class Clusterizer:
                     b = sum(self.get_cosine_similarity(word_1, word_2)
                     for word_2 in cluster_sequence[idx - 1]) / len(cluster_sequence[idx - 1])
 
-                if a == 0 or b == 0:
+                # a heuristic penalty to the wrongly occurring values <-1 and >1
+                if abs(a) <= 0.01 or abs(b) <= 0.01:
                     s = 0
                 else:
                     s = (b - a) / max(a, b)
+
                 silhouette_coefs.append(s)
 
         return sum(silhouette_coefs) / len(silhouette_coefs)

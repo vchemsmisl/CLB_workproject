@@ -1,13 +1,17 @@
 import gensim
 import pandas as pd
+from warnings import filterwarnings
 
 from src.data_extraction import DataExtractionPDTexts
 from src.clusters_data_saver import ClustersDataPDTexts
 from src.clusterizer import Clusterizer
 from src.vectorizer import Vectorizer
-from src.visualizer import PDVisualizer
+from src.visualizer import VisualizerPDTexts
 
-project_path = r'C:\pyproj\CLB_workproject'
+filterwarnings('ignore')
+
+# project_path = r'C:\pyproj\CLB_workproject' # Dasha
+project_path = r'C:\programming\CLB_workproject' # Danila
 
 
 def main():
@@ -19,69 +23,87 @@ def main():
     cluster_saver = ClustersDataPDTexts(extractor, geowac_model)
     clusters_getter = Clusterizer(geowac_model)
 
-    # general principle: clustering one cell at a time
-    DB_values_page = []
-    silhouette_values_page = []
+    clusters_not_exist_flag = False
 
-    for page in ['healthy', 'pd']:
-        DB_values_lexemes_kind = []
-        silhouette_values_lexemes_kind = []
+    if clusters_not_exist_flag:
+        # general principle: clustering one cell at a time
+        print('Starting clustering...')
+        DB_values_page = []
+        silhouette_values_page = []
 
-        for category in extractor.category_types:
-            sequence_series = extractor.get_series(page, category)  # getting words lists from a column
-            clusters_list = []  # a list of lists of clusters for current column
+        for page in ['healthy', 'pd']:
+            print(f'Clustering {page}')
+            DB_values_lexemes_kind = []
+            silhouette_values_lexemes_kind = []
 
-            DB_values_column = []
-            silhouette_values_column = []
+            for category in extractor.category_types:
+                print(f'Clustering {category} category in {page}')
+                sequence_series = extractor.get_series(page, category)  # getting words lists from a column
+                clusters_list = []  # a list of lists of clusters for current column
 
-            for words_string in sequence_series:
-                if not isinstance(words_string, str):  # dealing with NaNs or other non-string values
-                    clusters_list.append([])
-                    continue
+                DB_values_column = []
+                silhouette_values_column = []
 
-                tokens_sequence = vectoriser.get_sequence(words_string)
-                # string of words coverted to list with special tags
+                for words_string in sequence_series:
+                    if not isinstance(words_string, str):  # dealing with NaNs or other non-string values
+                        clusters_list.append([])
+                        continue
 
-                cell_clusters = clusters_getter.cluster(tokens_sequence)
-                # converting list of words to list of clusters
-                clusters_list.append(cell_clusters)
+                    tokens_sequence = vectoriser.get_sequence(words_string)
+                    # string of words coverted to list with special tags
 
-                DB_value = clusters_getter.davies_bouldin_index(cell_clusters)
-                # calculating Davies Bouldin index for each cell
-                if DB_value:
-                    DB_values_column.append(DB_value)
+                    cell_clusters = clusters_getter.cluster(tokens_sequence)
+                    # converting list of words to list of clusters
+                    clusters_list.append(cell_clusters)
 
-                silhouette_value = clusters_getter.silhouette_score(cell_clusters)
-                # calculating Silhouette score for each cell
-                silhouette_values_column.append(silhouette_value)
+                    DB_value = clusters_getter.davies_bouldin_index(cell_clusters)
+                    # calculating Davies Bouldin index for each cell
+                    if DB_value:
+                        DB_values_column.append(DB_value)
 
-            cluster_saver.add_column(page, category,
-                                     pd.Series(clusters_list))
-            # adding clusters column in a table
+                    silhouette_value = clusters_getter.silhouette_score(cell_clusters)
+                    # calculating Silhouette score for each cell
+                    silhouette_values_column.append(silhouette_value)
 
-            # counting metrics
-            cluster_saver.count_num_switches(page, category)
-            cluster_saver.count_mean_cluster_size(page, category)
-            cluster_saver.count_mean_distances(page, category)
-            cluster_saver.count_mean_silhouette_score(page, category)
-            cluster_saver.count_cluster_t_scores(page, category)
+                cluster_saver.add_column(page, category,
+                                         pd.Series(clusters_list))
+                # adding clusters column in a table
 
-            DB_values_lexemes_kind.extend(DB_values_column)
-            silhouette_values_lexemes_kind.extend(silhouette_values_column)
+                # counting metrics
+                cluster_saver.count_num_switches(page, category)
+                cluster_saver.count_mean_cluster_size(page, category)
+                cluster_saver.count_mean_distances(page, category)
+                cluster_saver.count_mean_silhouette_score(page, category)
+                cluster_saver.count_cluster_t_scores(page, category)
 
-        discourses = extractor.get_series(page, 'discourse.type')
-        cluster_saver.add_column(page, 'discourse.type', discourses)
+                DB_values_lexemes_kind.extend(DB_values_column)
+                silhouette_values_lexemes_kind.extend(silhouette_values_column)
 
-        DB_values_page.extend(DB_values_lexemes_kind)
-        silhouette_values_page.extend(silhouette_values_lexemes_kind)
+            # getting information about discourse types
+            discourses = extractor.get_series(page, 'discourse.type')
+            cluster_saver.add_column(page, 'discourse.type', discourses)
 
-    clusters_getter.evaluate_clustering(DB_values_page, silhouette_values_page)
-    cluster_saver.save_excel(rf'{project_path}\result\pd_texts\clusters_metrics_dataset.xlsx')
+            DB_values_page.extend(DB_values_lexemes_kind)
+            silhouette_values_page.extend(silhouette_values_lexemes_kind)
 
-    visualizer = PDVisualizer(cluster_saver, geowac_model)
+        print('Finishing clustering!')
+        # clustering evaluation
+        clusters_getter.evaluate_clustering(DB_values_page, silhouette_values_page)
+        # saving
+        cluster_saver.save_excel(rf'{project_path}\result\pd_texts\clusters_metrics_dataset.xlsx')
 
+        # visualizing clustering process and metrics
+        visualizer = VisualizerPDTexts(geowac_model, cluster_saver=cluster_saver)
+
+    else:
+        dataset_path = rf'{project_path}\result\pd_texts\clusters_metrics_dataset.xlsx'
+        visualizer = VisualizerPDTexts(geowac_model, dataset=dataset_path)
+
+    print('Starting two-group visualisation...')
+    # visualizing metrics across two groups: healthy and PD
     visualizer.visualize_all('healthy')
-    visualizer.visualize_all('impediment')
+    visualizer.visualize_all('PD')
+    print('Finishing two-group visualisation!')
 
 
 if __name__ == '__main__':
