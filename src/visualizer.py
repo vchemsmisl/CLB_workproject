@@ -292,16 +292,18 @@ class VisualizerPDTexts(VisualizerBase):
 
     def visualize_linear(self, sheet: str, id: str, discourse: str):
         """
-        dataset - one of 4 dataframes
+        dataset - one of 2 dataframes
         """
-        if sheet == 'healthy':
-            dataset = self.healthy_data
-        else:
-            dataset = self.impediment_data
+        dataset = self.healthy_data if sheet == 'healthy' else self.impediment_data
+
+        # if sheet == 'healthy':
+        #     dataset = self.healthy_data
+        # else:
+        #     dataset = self.impediment_data
 
         data = dataset.loc[dataset['fileID'] == id]  # data for a specific user
-
-        fig, axs = plt.subplots(3, figsize=(10, 15))
+        axs_number = len(self.category_types)
+        fig, axs = plt.subplots(axs_number, figsize=(30, 15))
         custom_lines = [
             plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='First Response'),
             plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='yellow', markersize=10, label='Switch'),
@@ -311,7 +313,10 @@ class VisualizerPDTexts(VisualizerBase):
         for i, columns in enumerate(self.category_types):  # getting names of columns we need
             words = [item for sublist in data[columns].values[0] for item in sublist]  # list of all words
             first_words = [sublist[0] for sublist in data[columns].values[0]]
-            ax = axs[i]
+            if axs_number > 1:
+                ax = axs[i]
+            else:
+                ax = axs
             y_min = 0
 
             for idx in range(len(words)):
