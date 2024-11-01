@@ -69,16 +69,15 @@ class DataExtractionPDTexts(DataExtractionBase):
         self.dataset_pd = pd.read_excel(link, sheet_name='PD')
         self.category_types = ['lemmas']
 
-    def get_ids(self, sheet_name: str = 'healthy') -> int:
-        # вроде теперь нигде не используется, можно убрать
-        """
-        Getting ID column
-        """
-        if sheet_name == 'healthy':
-            return self.dataset_norm['fileID']
-        return self.dataset_pd['fileID']
-
     def get_info_df(self, sheet_name: str = 'healthy'):
+        """
+        Getting one of the datasets (healthy or pd)
+         with the columns, that are necessary
+         for clustering and further work
+
+        :param sheet_name: healthy | PD, default = healthy
+        :return: pd.DataFrame with necessary columns
+        """
         if sheet_name == 'healthy':
             return self.dataset_norm[['speakerID', 'fileID', 'discourse.type', 'stimulus']]
         return self.dataset_pd[['speakerID', 'fileID', 'discourse.type', 'stimulus', 'diagnosis']]

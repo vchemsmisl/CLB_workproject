@@ -263,18 +263,14 @@ class VisualizerPDTexts(VisualizerBase):
                  dataset: str|None = None) -> None:
         super().__init__(cluster_saver)
 
-        # self.healthy_data = cluster_saver.get_df('healthy')[['fileID',
-        #                                                     'lemmas',
-        #                                                      'discourse.type']]
-        # self.impediment_data = cluster_saver.get_df('PD')[['fileID',
-        #                                                     'lemmas',
-        #                                                     'discourse.type']]
         if cluster_saver:
             self.healthy_data = cluster_saver.get_df('healthy')
             self.impediment_data = cluster_saver.get_df('PD')
         elif dataset:
+            # здесь дописать логику если у нас списки, возможно отдельная ф-ия для обработки
             self.healthy_data = pd.read_excel(dataset, sheet_name='healthy')
             self.impediment_data = pd.read_excel(dataset, sheet_name='PD')
+
         self.model = model
 
     def cosine_similarity(self, w1, w2):
@@ -289,8 +285,9 @@ class VisualizerPDTexts(VisualizerBase):
         else:
             dataset = self.impediment_data
 
-        data = dataset.loc[(dataset['fileID'] == id) & (dataset['discourse.type'] == discourse)]  # data for a specific user
+        data = dataset.loc[dataset['fileID'] == id]  # data for a specific user
 
+        categories = self.cluster_saver.extractor.category_types
         fig, axs = plt.subplots(3, figsize=(10, 15))
         custom_lines = [
             plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='First Response'),
@@ -298,7 +295,7 @@ class VisualizerPDTexts(VisualizerBase):
             plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=10, label='Cluster')
         ]
 
-        for i, columns in enumerate(data.columns[1:]):  # getting names of 3 columns we need
+        for i, columns in enumerate(categories):  # getting names of columns we need
             words = [item for sublist in data[columns].values[0] for item in sublist]  # list of all words
             first_words = [sublist[0] for sublist in data[columns].values[0]]
             ax = axs[i]
@@ -405,17 +402,17 @@ class VisualizerPDTexts(VisualizerBase):
         draw box plots for metrics
         """
         for id in self.cluster_saver.get_df(sheet)['fileID'].values:
-        if sheet == 'healthy':
-            for _, row in self.healthy_data.iterrows():
-                self.visualize_linear(sheet=sheet,
-                                      id=row['fileID'],
-                                      discourse=row['discourse.type'])
+            if sheet == 'healthy':
+                for _, row in self.healthy_data.iterrows():
+                    self.visualize_linear(sheet=sheet,
+                                          id=row['fileID'],
+                                          discourse=row['discourse.type'])
 
-        else:
-            for _, row in self.impediment_data.iterrows():
-                self.visualize_linear(sheet=sheet,
-                                      id=row['fileID'],
-                                      discourse=row['discourse.type'])
+            else:
+                for _, row in self.impediment_data.iterrows():
+                    self.visualize_linear(sheet=sheet,
+                                          id=row['fileID'],
+                                          discourse=row['discourse.type'])
 
         self._visualize_metric('Switch_number')
         self._visualize_metric('Mean_cluster_size')

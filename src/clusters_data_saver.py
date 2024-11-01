@@ -404,11 +404,6 @@ class ClustersDataPDTexts(ClustersDataBase):
                  extractor: DataExtractionPDTexts,
                  model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
         super().__init__(extractor, model)
-        # self.id_healthy = extractor.get_ids('healthy')
-        # self.id_impediment = extractor.get_ids('PD')
-        # self.healthy_data = pd.DataFrame(self.id_healthy)
-        # self.impediment_data = pd.DataFrame(self.id_impediment)
-
         self.healthy_data = extractor.get_info_df('healthy')
         self.impediment_data = extractor.get_info_df('PD')
         self.impediment_type = 'PD'
