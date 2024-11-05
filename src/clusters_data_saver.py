@@ -35,7 +35,7 @@ class ClustersDataBase:
         clusters_sizes = []
         for cell in row:
             clusters_sizes.extend(len(cluster) for cluster in cell)
-        return sum(clusters_sizes) / len(clusters_sizes)
+        return 0 if not len(clusters_sizes) else sum(clusters_sizes) / len(clusters_sizes)
 
     def avg_cluster_distance(self, cluster_sequence):
         """
@@ -88,8 +88,7 @@ class ClustersDataBase:
                     s = (b - a) / max(a, b)
 
                 silhouette_coefs.append(s)
-
-        return sum(silhouette_coefs) / len(silhouette_coefs)
+        return 0 if not len(silhouette_coefs) else sum(silhouette_coefs) / len(silhouette_coefs)
 
     @staticmethod
     def cluster_t_score(f_n, f_c, f_nc, N):
@@ -406,6 +405,109 @@ class ClustersDataPDTexts(ClustersDataBase):
         super().__init__(extractor, model)
         self.healthy_data = extractor.get_info_df('healthy')
         self.impediment_data = extractor.get_info_df('PD')
+        self.impediment_type = 'PD'
+
+    def get_df(self, sheet):
+        if sheet == 'healthy':
+            return self.healthy_data
+        return self.impediment_data
+
+    def add_column(self,
+                   sheet_name: str,
+                   category: str,
+                   clusters: pd.Series) -> None:
+        """
+        Adding a column with clusters
+        """
+        if sheet_name == 'healthy':
+            self.healthy_data[category] = clusters
+
+        else:
+            self.impediment_data[category] = clusters
+
+    def count_num_switches(self,
+                           sheet_name: str,
+                           category: str) -> None:
+        """
+        Count number of switches for each cell
+        """
+        if sheet_name == 'healthy':
+            new_column_name = f'Switch_number_{category}'
+            self.healthy_data[new_column_name] = self.healthy_data[category].apply(lambda x: len(x) - 1)
+
+        else:
+            new_column_name = f'Switch_number_{category}'
+            self.impediment_data[new_column_name] = self.impediment_data[category].apply(lambda x: len(x) - 1)
+
+    def count_mean_cluster_size(self,
+                                sheet_name: str,
+                                category: str) -> None:
+        """
+        Count mean cluster size for each row
+        """
+        if sheet_name == 'healthy':
+            new_column_name = f'Mean_cluster_size_{category}'
+            self.healthy_data[new_column_name] = self.healthy_data[category].apply(self.avg_cluster_size)
+
+        else:
+            new_column_name = f'Mean_cluster_size_{category}'
+            self.impediment_data[new_column_name] = self.impediment_data[category].apply(self.avg_cluster_size)
+
+    def count_mean_distances(self,
+                             sheet_name: str,
+                             category: str):
+        """
+        Counting distances for all columns
+        """
+        if sheet_name == 'healthy':
+            new_column_name = f'Mean_distance_{category}'
+            self.healthy_data[new_column_name] = self.healthy_data[category].apply(self.avg_cluster_distance)
+
+        else:
+            new_column_name = f'Mean_distance_{category}'
+            self.impediment_data[new_column_name] = self.impediment_data[category].apply(self.avg_cluster_distance)
+
+    def count_mean_silhouette_score(self,
+                                    sheet_name: str,
+                                    category: str):
+        """
+        Counting silhouette scores for all columns
+        """
+        if sheet_name == 'healthy':
+            new_column_name = f'Silhouette_score_{category}'
+            self.healthy_data[new_column_name] = self.healthy_data[category].apply(self.silhouette_score)
+
+        else:
+            new_column_name = f'Silhouette_score_{category}'
+            self.impediment_data[new_column_name] = self.impediment_data[category].apply(self.silhouette_score)
+
+    def count_cluster_t_scores(self,
+                               sheet_name: str,
+                               category: str):
+        """
+        Counting cluster t-scores for all columns
+        """
+        if sheet_name == 'healthy':
+            new_column_name = f'Mean_cluster_t_score_{category}'
+            self.healthy_data[new_column_name] = self.healthy_data[category].apply(
+                lambda x: self.avg_cluster_t_score(x, self.healthy_data[category])
+            )
+
+        else:
+            new_column_name = f'Mean_cluster_t_score_{category}'
+            self.impediment_data[new_column_name] = self.impediment_data[category].apply(
+                lambda x: self.avg_cluster_t_score(x, self.impediment_data[category])
+            )
+
+
+class ClustersDataPDCategories(ClustersDataBase):
+
+    def __init__(self,
+                 extractor: DataExtractionPDTexts,
+                 model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
+        super().__init__(extractor, model)
+        self.healthy_data = pd.DataFrame(extractor.get_ids('healthy'))
+        self.impediment_data = pd.DataFrame(extractor.get_ids('PD'))
         self.impediment_type = 'PD'
 
     def get_df(self, sheet):
