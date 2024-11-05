@@ -5,9 +5,16 @@ class DataExtractionBase:
 
     def __init__(self, link: str) -> None:
         self.category_types = None
+        self.dataset_norm = None
+        self.dataset_impediment = None
 
     def get_ids(self, sheet_name: str):
-        pass
+        """
+        Getting ID column
+        """
+        if sheet_name == 'healthy':
+            return self.dataset_norm['ID']
+        return self.dataset_impediment['ID']
 
     def get_column_name(self, category: str):
         pass
@@ -21,18 +28,10 @@ class DataExtractionAphasia(DataExtractionBase):
     def __init__(self, link: str) -> None:
         super().__init__(link)
         self.dataset_norm = pd.read_excel(link, sheet_name='healthy')
-        self.dataset_aphasia = pd.read_excel(link, sheet_name='aphasia')
+        self.dataset_impediment = pd.read_excel(link, sheet_name='aphasia')
         self.category_types = {'animals': 'a',
                                'professions': 'b',
                                'cities': 'c'}
-
-    def get_ids(self, sheet_name: str = 'healthy') -> int:
-        """
-        Getting ID column
-        """
-        if sheet_name == 'healthy':
-            return self.dataset_norm['ID']
-        return self.dataset_aphasia['ID']
 
     def get_column_name(self, category: str, lexemes: str) -> str:
         """
@@ -58,7 +57,7 @@ class DataExtractionAphasia(DataExtractionBase):
         if sheet_name == 'healthy':
             return self.dataset_norm[self.get_column_name(category, lexemes)]
 
-        return self.dataset_aphasia[self.get_column_name(category, lexemes)]
+        return self.dataset_impediment[self.get_column_name(category, lexemes)]
 
 
 class DataExtractionPDTexts(DataExtractionBase):
@@ -66,7 +65,7 @@ class DataExtractionPDTexts(DataExtractionBase):
     def __init__(self, link: str) -> None:
         super().__init__(link)
         self.dataset_norm = pd.read_excel(link, sheet_name='healthy')
-        self.dataset_pd = pd.read_excel(link, sheet_name='PD')
+        self.dataset_impediment = pd.read_excel(link, sheet_name='PD')
         self.category_types = ['lemmas']
 
     def get_info_df(self, sheet_name: str = 'healthy'):
@@ -80,7 +79,7 @@ class DataExtractionPDTexts(DataExtractionBase):
         """
         if sheet_name == 'healthy':
             return self.dataset_norm[['speakerID', 'fileID', 'discourse.type', 'stimulus']]
-        return self.dataset_pd[['speakerID', 'fileID', 'discourse.type', 'stimulus', 'diagnosis']]
+        return self.dataset_impediment[['speakerID', 'fileID', 'discourse.type', 'stimulus', 'diagnosis']]
 
     def get_series(self,
                    sheet_name: str,
@@ -95,4 +94,4 @@ class DataExtractionPDTexts(DataExtractionBase):
         """
         if sheet_name == 'healthy':
             return self.dataset_norm[category]
-        return self.dataset_pd[category]
+        return self.dataset_impediment[category]
