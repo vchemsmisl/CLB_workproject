@@ -19,12 +19,12 @@ def main():
     # defining classes
     model_path = rf'{project_path}\models\geowac\model.model'
     geowac_model = gensim.models.KeyedVectors.load(model_path)
-    extractor = DataExtractionPDTexts(rf'{project_path}\data\control_pd_preprocessed.xlsx')
+    extractor = DataExtractionPDTexts(rf'{project_path}\data\control_pd_preprocessed_final.xlsx')
     vectoriser = Vectorizer(geowac_model)
     cluster_saver = ClustersDataPDTexts(extractor, geowac_model)
     clusters_getter = Clusterizer(geowac_model)
 
-    clusters_not_exist_flag = False
+    clusters_not_exist_flag = True
 
     if clusters_not_exist_flag:
         # general principle: clustering one cell at a time
@@ -32,7 +32,7 @@ def main():
         DB_values_page = []
         silhouette_values_page = []
 
-        for page in ['healthy', 'pd']:
+        for page in ['healthy', 'PD']:
             print(f'Clustering {page}')
             DB_values_lexemes_kind = []
             silhouette_values_lexemes_kind = []

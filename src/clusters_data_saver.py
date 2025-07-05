@@ -4,7 +4,7 @@ import numpy as np
 from itertools import permutations
 from src.data_extraction import (DataExtractionBase,
                                  DataExtractionAphasia,
-                                 DataExtractionPDTexts)
+                                 DataExtractionPDTexts, DataExtractionSchizophrenia)
 
 
 class ClustersDataBase:
@@ -16,6 +16,7 @@ class ClustersDataBase:
         self.model = model
         self.healthy_data = None
         self.impediment_data = None
+        self.data = None
         self.impediment_type = ''
 
     def get_df(self, sheet):
@@ -35,7 +36,8 @@ class ClustersDataBase:
         clusters_sizes = []
         for cell in row:
             clusters_sizes.extend(len(cluster) for cluster in cell)
-        return sum(clusters_sizes) / len(clusters_sizes)
+
+        return sum(clusters_sizes) / len(clusters_sizes) if clusters_sizes else 0
 
     def avg_cluster_distance(self, cluster_sequence):
         """
@@ -89,7 +91,7 @@ class ClustersDataBase:
 
                 silhouette_coefs.append(s)
 
-        return sum(silhouette_coefs) / len(silhouette_coefs)
+        return sum(silhouette_coefs) / len(silhouette_coefs) if silhouette_coefs else -1
 
     @staticmethod
     def cluster_t_score(f_n, f_c, f_nc, N):
@@ -126,8 +128,11 @@ class ClustersDataBase:
         Saving data with clusters to an Excel file
         """
         with pd.ExcelWriter(path) as writer:
-            self.healthy_data.to_excel(writer, sheet_name='healthy', index=False)
-            self.impediment_data.to_excel(writer, sheet_name=self.impediment_type, index=False)
+            try:
+                self.healthy_data.to_excel(writer, sheet_name='healthy', index=False)
+                self.impediment_data.to_excel(writer, sheet_name=self.impediment_type, index=False)
+            except Exception:
+                self.data.to_excel(writer, index=False)
 
 
 class ClustersDataAphasia(ClustersDataBase):
@@ -499,3 +504,65 @@ class ClustersDataPDTexts(ClustersDataBase):
             self.impediment_data[new_column_name] = self.impediment_data[category].apply(
                 lambda x: self.avg_cluster_t_score(x, self.impediment_data[category])
             )
+
+
+class ClustersDataSchizophrenia(ClustersDataBase):
+
+    def __init__(self,
+                 extractor: DataExtractionSchizophrenia,
+                 model: gensim.models.fasttext.FastTextKeyedVectors) -> None:
+        super().__init__(extractor, model)
+        self.data = pd.DataFrame(extractor.get_ids())
+
+    def get_df(self):
+        return self.data
+
+    def add_column(self,
+                   category: str,
+                   clusters: pd.Series) -> None:
+        """
+        Adding a column with clusters
+        """
+        self.data[category] = clusters
+
+    def count_num_switches(self,
+                           category: str) -> None:
+        """
+        Count number of switches for each cell
+        """
+        new_column_name = f'Switch_number_{category}'
+        self.data[new_column_name] = self.data[category].apply(lambda x: len(x) - 1)
+
+    def count_mean_cluster_size(self,
+                                category: str) -> None:
+        """
+        Count mean cluster size for each row
+        """
+        new_column_name = f'Mean_cluster_size_{category}'
+        self.data[new_column_name] = self.data[category].apply(self.avg_cluster_size)
+
+    def count_mean_distances(self,
+                             category: str):
+        """
+        Counting distances for all columns
+        """
+        new_column_name = f'Mean_distance_{category}'
+        self.data[new_column_name] = self.data[category].apply(self.avg_cluster_distance)
+
+    def count_mean_silhouette_score(self,
+                                    category: str):
+        """
+        Counting silhouette scores for all columns
+        """
+        new_column_name = f'Silhouette_score_{category}'
+        self.data[new_column_name] = self.data[category].apply(self.silhouette_score)
+
+    def count_cluster_t_scores(self,
+                               category: str):
+        """
+        Counting cluster t-scores for all columns
+        """
+        new_column_name = f'Mean_cluster_t_score_{category}'
+        self.data[new_column_name] = self.data[category].apply(
+            lambda x: self.avg_cluster_t_score(x, self.data[category])
+        )

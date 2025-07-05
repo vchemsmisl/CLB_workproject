@@ -96,3 +96,33 @@ class DataExtractionPDTexts(DataExtractionBase):
         if sheet_name == 'healthy':
             return self.dataset_norm[category]
         return self.dataset_pd[category]
+
+
+class DataExtractionSchizophrenia(DataExtractionBase):
+
+    def __init__(self, link: str) -> None:
+        super().__init__(link)
+        self.dataset = pd.read_excel(link)
+        self.category_types = {'action': 'a',
+                               'fruit': 'b',
+                               'instrument': 'c'}
+
+    def get_ids(self) -> int:
+        """
+        Getting ID column
+        """
+        return self.dataset['ID']
+
+    def get_series(self,
+                   category: str) -> pd.DataFrame:
+        """
+        Getting one of 12 columns:
+          from one of the 2 pages of the dataset
+          from one of the 3 categories
+          from one of the types of lexemes
+
+        sheet_name: healthy | aphasia
+        category: animals | professions | cities
+        lexemes: clean | clean-all-lexemes
+        """
+        return self.dataset[category]
