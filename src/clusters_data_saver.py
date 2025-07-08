@@ -4,7 +4,8 @@ import numpy as np
 from itertools import permutations
 from src.data_extraction import (DataExtractionBase,
                                  DataExtractionAphasia,
-                                 DataExtractionPDTexts, DataExtractionSchizophrenia)
+                                 DataExtractionPDTexts,
+                                 DataExtractionSchizophrenia)
 
 
 class ClustersDataBase:
@@ -16,7 +17,6 @@ class ClustersDataBase:
         self.model = model
         self.healthy_data = None
         self.impediment_data = None
-        self.data = None
         self.impediment_type = ''
 
     def get_df(self, sheet):
@@ -36,7 +36,6 @@ class ClustersDataBase:
         clusters_sizes = []
         for cell in row:
             clusters_sizes.extend(len(cluster) for cluster in cell)
-
         return sum(clusters_sizes) / len(clusters_sizes) if clusters_sizes else 0
 
     def avg_cluster_distance(self, cluster_sequence):
@@ -65,7 +64,7 @@ class ClustersDataBase:
         if not distances:
             return np.NaN
 
-        return sum(distances)/len(distances)
+        return sum(distances) / len(distances) if distances else 0
 
     def silhouette_score(self, cluster_sequence):
         silhouette_coefs = []
@@ -514,7 +513,7 @@ class ClustersDataSchizophrenia(ClustersDataBase):
         super().__init__(extractor, model)
         self.data = pd.DataFrame(extractor.get_ids())
 
-    def get_df(self):
+    def get_df(self, sheet):
         return self.data
 
     def add_column(self,
@@ -564,5 +563,5 @@ class ClustersDataSchizophrenia(ClustersDataBase):
         """
         new_column_name = f'Mean_cluster_t_score_{category}'
         self.data[new_column_name] = self.data[category].apply(
-            lambda x: self.avg_cluster_t_score(x, self.data[category])
-        )
+                lambda x: self.avg_cluster_t_score(x, self.data[category])
+            )

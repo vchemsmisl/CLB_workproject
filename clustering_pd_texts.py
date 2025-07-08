@@ -1,3 +1,5 @@
+import os
+
 import gensim
 import pandas as pd
 from warnings import filterwarnings
@@ -10,13 +12,10 @@ from src.visualizer import VisualizerPDTexts
 
 filterwarnings('ignore')
 
-# вот это убрать и заменить на обращение к родительской папке
-# project_path = r'C:\pyproj\CLB_workproject' # Dasha
-project_path = r'C:\programming\CLB_workproject' # Danila
-
 
 def main():
     # defining classes
+    project_path = os.getcwd()
     model_path = rf'{project_path}\models\geowac\model.model'
     geowac_model = gensim.models.KeyedVectors.load(model_path)
     extractor = DataExtractionPDTexts(rf'{project_path}\data\control_pd_preprocessed_final.xlsx')

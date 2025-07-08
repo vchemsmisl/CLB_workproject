@@ -9,8 +9,8 @@ from src.clusterizer import Clusterizer
 
 def main():
     model_path = 'C:\programming\CLB_workproject\models\geowac\model.model'
-    data_path = 'C:\programming\CLB_workproject\data\schizophrenia_data\schiz_transcripts_preprocessed_clean.xlsx'
-    clustered_data_path = 'C:\programming\CLB_workproject\\result\schizophrenia\schiz_clusters_clean.xlsx'
+    data_path = 'C:\programming\CLB_workproject\data\schizophrenia_data\schiz_transcripts_preprocessed_all.xlsx'
+    clustered_data_path = 'C:\programming\CLB_workproject\\result\schizophrenia\schiz_clusters_all.xlsx'
 
     geowac_model = gensim.models.KeyedVectors.load(model_path)
     extractor = DataExtractionSchizophrenia(data_path)
