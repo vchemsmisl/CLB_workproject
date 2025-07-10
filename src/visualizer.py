@@ -1,11 +1,16 @@
 import matplotlib.pyplot as plt
+from seaborn import scatterplot
 import gensim
 import numpy as np
 import os
 
 import pandas as pd
+from sklearn.manifold import TSNE
+from sklearn.preprocessing import StandardScaler
 
-from src.clusters_data_saver import ClustersDataBase, ClustersDataAphasia, ClustersDataPDTexts
+from src.clusters_data_saver import ClustersDataBase, ClustersDataAphasia, ClustersDataPDTexts, \
+    ClustersDataSchizophrenia
+
 
 class VisualizerBase:
     def __init__(self, cluster_saver: ClustersDataBase) -> None:
@@ -437,3 +442,133 @@ class VisualizerPDTexts(VisualizerBase):
         self._visualize_metric('Mean_distance')
         self._visualize_metric('Silhouette_score')
         self._visualize_metric('Mean_cluster_t_score')
+
+
+class VisualizerSchizophrenia(VisualizerBase):
+
+    def __init__(self, cluster_saver: ClustersDataSchizophrenia, path_to_df, vectors: dict) -> None:
+        self.data = pd.read_excel(path_to_df)
+        self.data_for_linear = cluster_saver.get_df()
+        self.vectors = vectors
+
+    def cosine_similarity(self, w1, w2):
+        v1 = np.array(self.vectors.get(w1))
+        v2 = np.array(self.vectors.get(w2))
+
+        return np.dot(gensim.matutils.unitvec(v1),
+                      gensim.matutils.unitvec(v2))
+
+    def visualize_linear(self, id: str):
+        """
+        dataset - one of 4 dataframes
+        """
+        dataset = self.data_for_linear
+        data = dataset[dataset['ID'] == id]  # data for a specific user
+
+        fig, axs = plt.subplots(3, figsize=(10, 15))
+        custom_lines = [
+            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='First Response'),
+            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='yellow', markersize=10, label='Switch'),
+            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=10, label='Cluster')]
+
+        for i, columns in enumerate(data[['action', 'fruit', 'instrument']]):  # getting names of 3 columns we need
+
+            words = [item for sublist in data[columns].values[0] for item in sublist]  # list of all words
+            first_words = [sublist[0] for sublist in data[columns].values[0]]
+
+            ax = axs[i]
+            y_min = 0
+
+            for idx in range(len(words)):
+                label = words[idx]
+                if idx == 0:
+                    y = 0.0
+                else:
+                    y = self.cosine_similarity(words[idx], words[idx - 1])
+
+                if y < y_min:
+                    y_min = y
+
+                color = 'red' if idx == 0 else 'yellow' if words[idx] in first_words else 'blue'
+                ax.scatter(idx, y, label=label, color=color)
+
+                if idx == 1:
+                    ax.plot([idx - 1, idx], [0.0, y], color='gray', linewidth=0.8)
+
+                if idx > 1:
+                    ax.plot([idx - 1, idx], [self.cosine_similarity(words[idx - 2], words[idx - 1]), y], color='gray',
+                            linewidth=0.8)
+
+                ax.annotate(label, (idx, y), textcoords="offset points", xytext=(0, 10), fontsize=8, ha='center')
+
+            ax.set_ylim(y_min - 0.2, 1)
+            ax.set_title(f'{columns} for {id}')
+            ax.set_ylabel('Cosine Similarity')
+            ax.legend(handles=custom_lines, loc='upper right')
+
+        plt.tight_layout()
+
+        directory = self.create_dir(dataset, id)
+
+        self.save_image(directory)
+
+    @staticmethod
+    def _set_class_tag(ID):
+        if 'HC' in ID:
+            return 'healthy control'
+        elif '(' in ID:
+            return 'schizophrenia relative'
+        else:
+            return 'schizophrenia'
+
+    def plot_scatter(self):
+
+        self.data['class_tag'] = self.data['ID'].apply(self._set_class_tag)
+
+        scaled_data = StandardScaler().fit_transform(
+            self.data[['Switch_number',
+                       # 'Mean_cluster_size',
+                       # 'Mean_distance',
+                       'Silhouette_score',
+                       'Mean_cluster_t_score']]
+        )
+
+        flattened_data = TSNE(n_components=2).fit_transform(scaled_data)
+        flattened_data_df = pd.DataFrame(
+            {
+                'TSNE1': flattened_data[:, 0],
+                'TSNE2': flattened_data[:, 1],
+                'tags': self.data['class_tag'].tolist()
+            }
+        )
+
+        scatterplot(data=flattened_data_df, x='TSNE1', y='TSNE2', hue='tags')
+
+        save_dir = 'visualization/schizophrenia'
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        self.save_image(os.path.join(save_dir, f'scatter_patients.jpg'))
+
+    def create_dir(self, dataset, id):
+        """
+        Creating/finding a sufficient directory
+        """
+
+        folder_dir = 'schizophrenia/'
+        save_dir = os.path.join('visualization/', folder_dir)
+
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        return os.path.join(save_dir, f'{id}.jpg')
+
+    def visualize_all(self):
+        """
+        Build 3 linear graphs for each datatype for a particular id,
+        draw scatter plot
+        """
+        for id in self.data['ID'].values:
+            self.visualize_linear(id=id)
+
+        # self.plot_scatter()

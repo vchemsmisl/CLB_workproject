@@ -1,5 +1,6 @@
 import gensim
 import json
+from pathlib import Path
 
 
 class Vectorizer:
@@ -29,7 +30,8 @@ class Vectorizer:
         """
         Updating and saving the json file
         """
-        with open("/content/vectors.json", "w") as fp:
+
+        with open(str(Path(__file__).parent.parent) + '/vectors.json', "w", encoding='utf-8') as fp:
             json.dump(self._vectors_dictionary, fp, ensure_ascii=False)
 
     def get_dictionary(self) -> dict:

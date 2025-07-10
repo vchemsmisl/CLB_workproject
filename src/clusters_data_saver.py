@@ -513,7 +513,7 @@ class ClustersDataSchizophrenia(ClustersDataBase):
         super().__init__(extractor, model)
         self.data = pd.DataFrame(extractor.get_ids())
 
-    def get_df(self, sheet):
+    def get_df(self):
         return self.data
 
     def add_column(self,
